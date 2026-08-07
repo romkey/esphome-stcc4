@@ -1,0 +1,183 @@
+# Advanced ESPHome configuration for STCC4 CO2 sensor
+# This example shows all available options and advanced features
+
+esphome:
+  name: stcc4-advanced
+  friendly_name: STCC4 Advanced
+  comment: STCC4 CO2 sensor with advanced features
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+# Enable logging with custom level
+logger:
+  level: DEBUG
+  logs:
+    sensor: INFO
+    i2c: DEBUG
+    stcc4: DEBUG
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: !secret api_encryption_key
+
+ota:
+  password: !secret ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  
+  # Enable fallback hotspot
+  ap:
+    ssid: "STCC4 Fallback"
+    password: !secret fallback_password
+
+captive_portal:
+
+# Web server for debugging
+web_server:
+  port: 80
+
+# I2C Bus Configuration
+i2c:
+  sda: GPIO21
+  scl: GPIO22
+  scan: true
+  frequency: 100kHz  # Standard I2C frequency
+
+# STCC4 Sensor with all options
+sensor:
+  - platform: stcc4
+    address: 0x64         # I2C address (default: 0x64)
+    update_interval: 30s  # Poll sensor every 30 seconds (default: 60s)
+    
+    # CO2 Sensor with filters
+    co2:
+      name: "Indoor CO2"
+      id: co2_sensor
+      icon: "mdi:molecule-co2"
+      accuracy_decimals: 0
+      filters:
+        # Smooth out readings with moving average
+        - sliding_window_moving_average:
+            window_size: 5
+            send_every: 1
+        # Remove outliers
+        - quantile:
+            window_size: 5
+            send_every: 1
+            send_first_at: 5
+            quantile: .5
+      on_value:
+        then:
+          - if:
+              condition:
+                lambda: 'return x > 1000;'
+              then:
+                - logger.log:
+                    format: "High CO2 level detected: %.0f ppm"
+                    args: ['x']
+    
+    # Temperature Sensor
+    temperature:
+      name: "Indoor Temperature"
+      id: temp_sensor
+      icon: "mdi:thermometer"
+      accuracy_decimals: 2
+      filters:
+        - offset: 0.0  # Add temperature offset if needed
+        - sliding_window_moving_average:
+            window_size: 3
+            send_every: 1
+    
+    # Humidity Sensor
+    humidity:
+      name: "Indoor Humidity"
+      id: humidity_sensor
+      icon: "mdi:water-percent"
+      accuracy_decimals: 2
+      filters:
+        - offset: 0.0  # Add humidity offset if needed
+        - sliding_window_moving_average:
+            window_size: 3
+            send_every: 1
+    
+    # Altitude compensation for location (choose one)
+    altitude_compensation: 500  # 500 meters above sea level
+    # OR use pressure_compensation directly:
+    # pressure_compensation: 95464  # Pressure in Pascals at 500m altitude
+
+# Text sensors for additional info
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: "IP Address"
+    ssid:
+      name: "Connected SSID"
+
+# Template sensors for derived values
+sensor:
+  # WiFi Signal Strength
+  - platform: wifi_signal
+    name: "WiFi Signal"
+    update_interval: 60s
+  
+  # Uptime
+  - platform: uptime
+    name: "Uptime"
+    update_interval: 60s
+  
+  # CO2 Status as numeric (for automations)
+  - platform: template
+    name: "CO2 Status"
+    id: co2_status
+    icon: "mdi:air-filter"
+    accuracy_decimals: 0
+    lambda: |-
+      if (id(co2_sensor).state < 800) return 0;  // Good
+      if (id(co2_sensor).state < 1000) return 1; // Moderate
+      if (id(co2_sensor).state < 1500) return 2; // Poor
+      return 3;  // Very Poor
+  
+  # Absolute humidity calculation
+  - platform: template
+    name: "Absolute Humidity"
+    id: absolute_humidity
+    icon: "mdi:water"
+    unit_of_measurement: "g/m³"
+    accuracy_decimals: 2
+    lambda: |-
+      // Calculate absolute humidity from temperature and relative humidity
+      // Using Magnus formula
+      const float temp = id(temp_sensor).state;
+      const float rh = id(humidity_sensor).state;
+      const float a = 17.27;
+      const float b = 237.7;
+      float alpha = ((a * temp) / (b + temp)) + log(rh / 100.0);
+      float abs_humidity = (6.112 * exp(alpha) * 2.1674) / (273.15 + temp);
+      return abs_humidity;
+
+# Binary sensors for threshold alerts
+binary_sensor:
+  - platform: template
+    name: "CO2 Alert"
+    id: co2_alert
+    device_class: safety
+    lambda: |-
+      return id(co2_sensor).state > 1500;
+
+# Status LED
+status_led:
+  pin:
+    number: GPIO2
+    inverted: false
+
+# Switch to restart the device remotely
+switch:
+  - platform: restart
+    name: "Restart"
+
