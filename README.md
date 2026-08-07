@@ -26,7 +26,20 @@ The STCC4 uses I2C communication and operates at 3.3V:
 
 ## Installation
 
-### Option 1: Copy Component Files
+### Option 1: Use as External Component (Recommended)
+
+Add this to your ESPHome configuration to load the component directly from GitHub:
+
+```yaml
+external_components:
+  - source:
+      type: git
+      url: https://github.com/romkey/esphome-stcc4
+      ref: main
+    components: [ stcc4 ]
+```
+
+### Option 2: Copy Component Files
 
 1. Copy the `components/stcc4` directory to your ESPHome configuration directory:
    ```
@@ -40,34 +53,34 @@ The STCC4 uses I2C communication and operates at 3.3V:
            └── stcc4.cpp
    ```
 
-2. Reference the component in your YAML configuration (see example below)
-
-### Option 2: Use as External Component
-
-Add this to your ESPHome configuration:
-
-```yaml
-external_components:
-  - source:
-      type: local
-      path: components
-```
+2. Add the external component reference in your YAML configuration:
+   ```yaml
+   external_components:
+     - source:
+         type: local
+         path: components
+   ```
 
 ## Configuration
 
 ### Basic Configuration
 
 ```yaml
+# Load the component from GitHub
+external_components:
+  - source:
+      type: git
+      url: https://github.com/romkey/esphome-stcc4
+      ref: main
+    components: [ stcc4 ]
+
 # I2C Bus Configuration
 i2c:
   sda: GPIO21
   scl: GPIO22
   scan: true
 
-# STCC4 Component
-stcc4:
-  update_interval: 60s
-
+# STCC4 Sensor
 sensor:
   - platform: stcc4
     co2:
@@ -81,19 +94,25 @@ sensor:
 ### Advanced Configuration
 
 ```yaml
+# Load the component from GitHub
+external_components:
+  - source:
+      type: git
+      url: https://github.com/romkey/esphome-stcc4
+      ref: main
+    components: [ stcc4 ]
+
 # I2C Bus Configuration
 i2c:
   sda: GPIO21
   scl: GPIO22
   scan: true
 
-# STCC4 Component
-stcc4:
-  update_interval: 60s  # Polling interval (default: 60s)
-  address: 0x64         # I2C address (default: 0x64)
-
+# STCC4 Sensor
 sensor:
   - platform: stcc4
+    address: 0x64         # I2C address (default: 0x64)
+    update_interval: 60s  # Polling interval (default: 60s)
     co2:
       name: "CO2 Concentration"
       id: co2_ppm
@@ -118,13 +137,10 @@ sensor:
 
 ## Configuration Options
 
-### Component Options
+### Sensor Platform Options
 
-- **update_interval** (Optional, Time): The interval to check the sensor. Defaults to `60s`.
 - **address** (Optional, int): The I2C address of the sensor. Defaults to `0x64`.
-
-### Sensor Options
-
+- **update_interval** (Optional, Time): The interval to check the sensor. Defaults to `60s`.
 - **co2** (Optional): CO2 concentration sensor in ppm
   - All options from [Sensor](https://esphome.io/components/sensor/index.html#config-sensor)
 - **temperature** (Optional): Temperature sensor in °C
@@ -190,9 +206,11 @@ sensor:
 
 ## References
 
+- [GitHub Repository](https://github.com/romkey/esphome-stcc4)
 - [STCC4 Datasheet](datasheets/STCC4.pdf)
 - [Sensirion Arduino Library](https://github.com/Sensirion/arduino-i2c-stcc4)
 - [ESPHome Documentation](https://esphome.io/)
+- [ESPHome External Components](https://esphome.io/components/external_components.html)
 
 ## License
 

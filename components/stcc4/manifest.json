@@ -2,9 +2,9 @@
   "name": "STCC4",
   "description": "ESPHome component for Sensirion STCC4 CO2 sensor",
   "version": "1.0.0",
-  "codeowners": ["@yourusername"],
+  "codeowners": ["@romkey"],
   "requirements": [],
   "dependencies": ["i2c"],
-  "documentation": "https://github.com/yourusername/esphome-stcc4"
+  "documentation": "https://github.com/romkey/esphome-stcc4"
 }
 
