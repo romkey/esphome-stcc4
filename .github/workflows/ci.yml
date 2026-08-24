@@ -68,6 +68,8 @@ jobs:
       - name: Validate ESPHome configuration
         run: esphome config "${{ matrix.config }}"
 
+      - name: Run CRC-8 unit test
+        run: python .ci/test_crc.py
   build:
     name: Build
     runs-on: ubuntu-latest

@@ -59,8 +59,9 @@ i2c:
 # STCC4 Sensor with all options
 sensor:
   - platform: stcc4
-    address: 0x64         # I2C address (default: 0x64)
-    update_interval: 30s  # Poll sensor every 30 seconds (default: 60s)
+    address: 0x64
+    id: stcc4_sensor
+    update_interval: 30s
     
     # CO2 Sensor with filters
     co2:
@@ -113,12 +114,22 @@ sensor:
             window_size: 3
             send_every: 1
     
-    # Altitude compensation for location (choose one)
-    altitude_compensation: 500  # 500 meters above sea level
-    # OR use pressure_compensation directly:
-    # pressure_compensation: 95464  # Pressure in Pascals at 500m altitude
+    # Pressure compensation in Pascals (40000-110000); mutually exclusive with altitude
+    # altitude_compensation: 500
+    self_test_on_boot: true
+    soft_reset_on_boot: true
+    measurement_mode: continuous
 
-# Text sensors for additional info
+# Diagnostic text sensors for STCC4 (requires id on sensor platform above)
+# text_sensor:
+#   - platform: stcc4
+#     id: stcc4_sensor
+#     sensor_status:
+#       name: "STCC4 Status"
+#     last_error:
+#       name: "STCC4 Last Error"
+
+# Text sensors for device info
 text_sensor:
   - platform: wifi_info
     ip_address:

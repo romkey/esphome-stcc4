@@ -7,4 +7,3 @@
   "dependencies": ["i2c"],
   "documentation": "https://github.com/romkey/esphome-stcc4"
 }
-
