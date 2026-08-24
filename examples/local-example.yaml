@@ -1,0 +1,38 @@
+# Local development example: uses the component source in ../components.
+#
+# Copy this file to local.yaml and add Wi-Fi or other secrets as needed:
+#   cp examples/local-example.yaml examples/local.yaml
+#
+# Then build or flash with Docker Compose:
+#   docker compose run --rm esphome compile examples/local.yaml
+#   docker compose run --rm esphome run examples/local.yaml
+
+esphome:
+  name: stcc4-local
+  friendly_name: STCC4 Local
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+external_components:
+  - source:
+      type: local
+      path: ../components
+    components: [stcc4]
+
+logger:
+
+i2c:
+  sda: GPIO21
+  scl: GPIO22
+
+sensor:
+  - platform: stcc4
+    co2:
+      name: "CO2"
+    temperature:
+      name: "Temperature"
+    humidity:
+      name: "Humidity"

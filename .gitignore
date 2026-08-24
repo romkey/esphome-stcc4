@@ -28,3 +28,7 @@ Thumbs.db
 # Secrets
 secrets.yaml
 
+# Local ESPHome configs (copy from examples/local-example.yaml)
+local*.yaml
+!examples/local-example.yaml
+
