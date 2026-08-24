@@ -11,6 +11,13 @@ esp32:
   framework:
     type: arduino
 
+external_components:
+  - source:
+      type: git
+      url: https://github.com/romkey/esphome-stcc4
+      ref: main
+    components: [stcc4]
+
 # Enable logging with custom level
 logger:
   level: DEBUG

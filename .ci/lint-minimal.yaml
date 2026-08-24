@@ -1,0 +1,30 @@
+# CI lint target mirroring examples/example-minimal.yaml with a local component path.
+esphome:
+  name: stcc4-minimal
+  friendly_name: STCC4 Minimal
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+external_components:
+  - source:
+      type: local
+      path: ../components
+    components: [stcc4]
+
+logger:
+
+i2c:
+  sda: GPIO21
+  scl: GPIO22
+
+sensor:
+  - platform: stcc4
+    co2:
+      name: "CO2"
+    temperature:
+      name: "Temperature"
+    humidity:
+      name: "Humidity"

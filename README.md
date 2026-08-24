@@ -1,5 +1,10 @@
 # ESPHome STCC4 CO2 Sensor Component
 
+[![Validate](https://github.com/romkey/esphome-stcc4/actions/workflows/ci.yml/badge.svg?job=lint)](https://github.com/romkey/esphome-stcc4/actions/workflows/ci.yml)
+[![Build](https://github.com/romkey/esphome-stcc4/actions/workflows/ci.yml/badge.svg?job=build)](https://github.com/romkey/esphome-stcc4/actions/workflows/ci.yml)
+[![ESPHome](https://img.shields.io/badge/ESPHome-external%20component-18BCF2?style=flat-square&logo=esphome&logoColor=white)](https://esphome.io/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 This is an ESPHome custom component for the Sensirion STCC4 CO2 sensor. The STCC4 is a high-accuracy CO2 sensor that also provides temperature and humidity measurements.
 
 ## Features
