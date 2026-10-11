@@ -1,0 +1,59 @@
+# Settings shared by every example: project version, networking, security,
+# recovery and the standard esphome-lib packages.
+#
+# Not an example itself (scripts/list-configs.sh only looks one level deep).
+# Each example sets name, friendly_name, board and pins, then includes this.
+
+substitutions:
+  # Must match the release tag without the "v"; the release workflow checks.
+  project_version: "0.1.0"
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+  project:
+    name: romkey.esphome-stcc4
+    version: ${project_version}
+
+packages:
+  esp32: github://romkey/esphome-lib/lib/esp32.yml@v0.2.0
+  wifi_diagnostics: github://romkey/esphome-lib/lib/wifi-diagnostics.yml@v0.2.0
+  restart: github://romkey/esphome-lib/lib/restart.yml@v0.2.0
+  i2c_scan: github://romkey/esphome-lib/lib/i2c-scan.yml@v0.2.0
+
+logger:
+
+api:
+  encryption:
+    key: !secret api_encryption_key
+
+# OTA reuses the api encryption key. Don't add an OTA password; ESPHome
+# deprecated it.
+ota:
+  - platform: esphome
+    encryption:
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  # Fallback hotspot with a captive portal if the configured network is
+  # unreachable. Remove both on flash-constrained devices.
+  ap:
+    password: !secret fallback_ap_password
+
+captive_portal:
+
+button:
+  # Reboot into safe mode (OTA only) to recover from a bad configuration.
+  - platform: safe_mode
+    name: "Safe Mode Boot"
+    entity_category: config
+
+# The STCC4 component from this checkout, so CI builds the code under test.
+# Paths are relative to the example, not to this file. Your own configs use
+# github://romkey/esphome-stcc4@vX.Y.Z instead (see README.md).
+external_components:
+  - source:
+      type: local
+      path: ../components
+    components: [stcc4]

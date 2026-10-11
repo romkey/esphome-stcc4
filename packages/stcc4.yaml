@@ -1,0 +1,95 @@
+# Sensirion STCC4 CO2 sensor: CO2, plus temperature and humidity passed
+# through from an SHT4x on the STCC4's controller pads, and two diagnostic
+# text sensors for the driver's status and last error.
+#
+# Requires:
+#   - the stcc4 external component, e.g.
+#       external_components:
+#         - source: github://romkey/esphome-stcc4@vX.Y.Z
+#           components: [stcc4]
+#   - an I2C bus with id i2c0 (or set stcc4_i2c_id). The STCC4 doesn't clock-stretch.
+#
+# Options without a substitution (altitude_compensation,
+# pressure_compensation, sleep_after_measurement, rht_compensation) can be
+# added from the including config with `- id: !extend ${stcc4_id}`; see
+# docs/configuration.md.
+#
+# Substitutions:
+#   stcc4_id                      component id, change if included twice (stcc4_sensor)
+#   stcc4_i2c_id                  I2C bus id (i2c0)
+#   stcc4_address                 I2C address, 0x64 or 0x65 with ADDR high (0x64)
+#   stcc4_update_interval         polling interval, at least 1s (60s)
+#   stcc4_measurement_mode        continuous or single_shot (continuous)
+#   stcc4_self_test_on_boot       run the self-test at boot (true)
+#   stcc4_soft_reset_on_boot      I2C general-call reset at boot (true)
+#   stcc4_co2_name                CO2 entity name ("CO2")
+#   stcc4_co2_id                  CO2 sensor id (stcc4_co2)
+#   stcc4_co2_window              moving-average window, in samples; 1 = off (3)
+#   stcc4_temperature_name        temperature entity name ("Temperature")
+#   stcc4_temperature_id          temperature sensor id (stcc4_temperature)
+#   stcc4_humidity_name           humidity entity name ("Humidity")
+#   stcc4_humidity_id             humidity sensor id (stcc4_humidity)
+#   stcc4_status_name             status entity name ("STCC4 Status")
+#   stcc4_status_id               status text sensor id (stcc4_status)
+#   stcc4_last_error_name         last-error entity name ("STCC4 Last Error")
+#   stcc4_last_error_id           last-error text sensor id (stcc4_last_error)
+#   stcc4_diagnostic_category     category of the two text sensors (diagnostic)
+
+substitutions:
+  stcc4_id: "stcc4_sensor"
+  stcc4_i2c_id: "i2c0"
+  stcc4_address: "0x64"
+  stcc4_update_interval: "60s"
+  stcc4_measurement_mode: "continuous"
+  stcc4_self_test_on_boot: "true"
+  stcc4_soft_reset_on_boot: "true"
+  stcc4_co2_name: "CO2"
+  stcc4_co2_id: "stcc4_co2"
+  stcc4_co2_window: "3"
+  stcc4_temperature_name: "Temperature"
+  stcc4_temperature_id: "stcc4_temperature"
+  stcc4_humidity_name: "Humidity"
+  stcc4_humidity_id: "stcc4_humidity"
+  stcc4_status_name: "STCC4 Status"
+  stcc4_status_id: "stcc4_status"
+  stcc4_last_error_name: "STCC4 Last Error"
+  stcc4_last_error_id: "stcc4_last_error"
+  stcc4_diagnostic_category: "diagnostic"
+
+sensor:
+  - platform: stcc4
+    id: ${stcc4_id}
+    i2c_id: ${stcc4_i2c_id}
+    address: ${stcc4_address}
+    update_interval: ${stcc4_update_interval}
+    measurement_mode: ${stcc4_measurement_mode}
+    self_test_on_boot: ${stcc4_self_test_on_boot}
+    soft_reset_on_boot: ${stcc4_soft_reset_on_boot}
+    co2:
+      name: "${stcc4_co2_name}"
+      id: ${stcc4_co2_id}
+      filters:
+        # The datasheet specifies +/-(100 ppm + 10%); smooth sample noise.
+        - sliding_window_moving_average:
+            window_size: ${stcc4_co2_window}
+            send_every: 1
+    temperature:
+      name: "${stcc4_temperature_name}"
+      id: ${stcc4_temperature_id}
+      accuracy_decimals: 1
+    humidity:
+      name: "${stcc4_humidity_name}"
+      id: ${stcc4_humidity_id}
+      accuracy_decimals: 1
+
+text_sensor:
+  - platform: stcc4
+    id: ${stcc4_id}
+    sensor_status:
+      name: "${stcc4_status_name}"
+      id: ${stcc4_status_id}
+      entity_category: "${stcc4_diagnostic_category}"
+    last_error:
+      name: "${stcc4_last_error_name}"
+      id: ${stcc4_last_error_id}
+      entity_category: "${stcc4_diagnostic_category}"

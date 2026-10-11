@@ -1,0 +1,46 @@
+# Example: an STCC4 on an ESP32-S3 DevKitC-1 (Xtensa LX7) with no SHT4x on
+# its controller pads, so a separate SHT4x on the main bus supplies the
+# temperature and humidity used for CO2 compensation.
+#
+# Board and pin choices live here, never in packages/.
+
+substitutions:
+  name: stcc4-esp32-s3
+  friendly_name: STCC4 ESP32-S3
+  # The STCC4's own temperature/humidity outputs would only repeat what
+  # rht_compensation writes, so name them as such.
+  stcc4_temperature_name: "STCC4 Compensation Temperature"
+  stcc4_humidity_name: "STCC4 Compensation Humidity"
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: esp-idf
+
+packages:
+  base: !include common/base.yaml
+  stcc4: !include ../packages/stcc4.yaml
+
+# GPIO8/GPIO9 are free on the DevKitC-1 and not strapping (0, 3, 45, 46) or
+# flash pins.
+i2c:
+  id: i2c0
+  sda: GPIO8
+  scl: GPIO9
+  frequency: 100kHz
+
+sensor:
+  - platform: sht4x
+    i2c_id: i2c0
+    temperature:
+      id: room_temperature
+      name: "Temperature"
+    humidity:
+      id: room_humidity
+      name: "Humidity"
+
+  - id: !extend stcc4_sensor
+    # Both values must come from the same physical sensor.
+    rht_compensation:
+      temperature: room_temperature
+      humidity: room_humidity

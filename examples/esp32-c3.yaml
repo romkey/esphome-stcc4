@@ -1,0 +1,32 @@
+# Example: an STCC4 on an ESP32-C3 DevKitM-1 (RISC-V), in low-power
+# single-shot mode with a fixed pressure.
+#
+# Board and pin choices live here, never in packages/.
+
+substitutions:
+  name: stcc4-esp32-c3
+  friendly_name: STCC4 ESP32-C3
+  stcc4_measurement_mode: single_shot
+
+esp32:
+  board: esp32-c3-devkitm-1
+  framework:
+    type: esp-idf
+
+packages:
+  base: !include common/base.yaml
+  stcc4: !include ../packages/stcc4.yaml
+
+# GPIO6/GPIO7 are free on the DevKitM-1 and not strapping (2, 8, 9) or
+# flash pins.
+i2c:
+  id: i2c0
+  sda: GPIO6
+  scl: GPIO7
+  frequency: 100kHz
+
+sensor:
+  - id: !extend stcc4_sensor
+    sleep_after_measurement: true
+    # Pascals, 40000-110000. Mutually exclusive with altitude_compensation.
+    pressure_compensation: 95000

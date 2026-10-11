@@ -1,34 +1,23 @@
-# ESPHome
+# ESPHome build output
 .esphome/
-*.bin
-*.elf
-*.map
+
+# Secrets and personal device configs (either extension)
+**/secrets.yaml
+**/secrets.yml
+**/local*.yaml
+**/local*.yml
 
 # Python
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-venv/
-*.egg-info/
+*.pyc
 
-# IDE
+# macOS
+.DS_Store
+
+# Editors
+*~
 .vscode/
 .idea/
-*.swp
-*.swo
-*~
 
-# OS
-.DS_Store
-Thumbs.db
-
-# Secrets
-secrets.yaml
-
-# Local ESPHome configs (copy from examples/local-example.yaml)
-local*.yaml
-!examples/local-example.yaml
-
+# Local checkout of Sensirion's arduino-i2c-stcc4, kept for reference only
+/reference/

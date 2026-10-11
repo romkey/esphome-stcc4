@@ -2,9 +2,10 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import text_sensor
 from esphome.const import CONF_ID
+
 from . import sensor as stcc4_sensor
 
-DEPENDENCIES = ["stcc4", "text_sensor"]
+DEPENDENCIES = ["i2c"]
 
 STCC4Component = stcc4_sensor.STCC4Component
 

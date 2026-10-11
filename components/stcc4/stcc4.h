@@ -24,9 +24,7 @@ class STCC4Component : public PollingComponent, public i2c::I2CDevice {
   float get_setup_priority() const override;
 
   void set_co2_sensor(sensor::Sensor *co2_sensor) { this->co2_sensor_ = co2_sensor; }
-  void set_temperature_sensor(sensor::Sensor *temperature_sensor) {
-    this->temperature_sensor_ = temperature_sensor;
-  }
+  void set_temperature_sensor(sensor::Sensor *temperature_sensor) { this->temperature_sensor_ = temperature_sensor; }
   void set_humidity_sensor(sensor::Sensor *humidity_sensor) { this->humidity_sensor_ = humidity_sensor; }
   void set_status_text_sensor(text_sensor::TextSensor *sensor) { this->status_text_sensor_ = sensor; }
   void set_error_text_sensor(text_sensor::TextSensor *sensor) { this->error_text_sensor_ = sensor; }
