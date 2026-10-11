@@ -3,6 +3,7 @@
 #ifdef USE_TEXT_SENSOR
 #include "esphome/components/text_sensor/text_sensor.h"
 #endif
+#include <cinttypes>
 #include <cmath>
 #include <cstdio>
 
@@ -25,15 +26,15 @@ static const uint16_t CMD_PERFORM_SELF_TEST = 0x278C;
 static const uint16_t CMD_DISABLE_TESTING_MODE = 0x3F3D;
 
 // Timing constants (milliseconds) — annotated per STCC4 datasheet v1 (June 2025)
-static const uint16_t SOFT_RESET_DELAY = 10;           // §3.4.10 perform_soft_reset execution time
-static const uint16_t POWER_UP_DELAY = 10;             // §2.6 tPU (VDD >= 2.7 V)
-static const uint16_t STOP_MEASUREMENT_DELAY = 1200;   // §3.4.2: 1 s interval + 200 ms tolerance
-static const uint16_t READ_EXECUTION_DELAY = 1;        // §3.4.3 read_measurement execution time
-static const uint16_t MEASUREMENT_SETTLE_DELAY = 1000; // §3.4.1: wait 1 s after start before first read
-static const uint16_t READ_RETRY_DELAY = 150;          // §3.4.1: retry read after 150 ms if NACK
-static const uint16_t SELF_TEST_DELAY = 360;           // §3.4.12 perform_self_test execution time
+static const uint16_t SOFT_RESET_DELAY = 10;            // §3.4.10 perform_soft_reset execution time
+static const uint16_t POWER_UP_DELAY = 10;              // §2.6 tPU (VDD >= 2.7 V)
+static const uint16_t STOP_MEASUREMENT_DELAY = 1200;    // §3.4.2: 1 s interval + 200 ms tolerance
+static const uint16_t READ_EXECUTION_DELAY = 1;         // §3.4.3 read_measurement execution time
+static const uint16_t MEASUREMENT_SETTLE_DELAY = 1000;  // §3.4.1: wait 1 s after start before first read
+static const uint16_t READ_RETRY_DELAY = 150;           // §3.4.1: retry read after 150 ms if NACK
+static const uint16_t SELF_TEST_DELAY = 360;            // §3.4.12 perform_self_test execution time
 static const uint16_t SINGLE_SHOT_DELAY = 500;          // §3.4.10 measure_single_shot (reference driver)
-static const uint16_t EXIT_SLEEP_DELAY = 5;            // §3.4.8 exit_sleep_mode
+static const uint16_t EXIT_SLEEP_DELAY = 5;             // §3.4.8 exit_sleep_mode
 static const uint16_t SETUP_RETRY_DELAYS[] = {250, 500, 1000, 1000, 1000};
 
 void STCC4Component::setup() {
@@ -94,11 +95,12 @@ void STCC4Component::run_setup_state_() {
       this->product_id_ = product_id;
       this->serial_number_ = serial_number;
       if (product_id != STCC4_PRODUCT_ID) {
-        ESP_LOGE(TAG, "STCC4 not found: expected product ID 0x%08X, got 0x%08X", STCC4_PRODUCT_ID, product_id);
+        ESP_LOGE(TAG, "STCC4 not found: expected product ID 0x%08" PRIX32 ", got 0x%08" PRIX32, STCC4_PRODUCT_ID,
+                 product_id);
         this->mark_failed();
         return;
       }
-      ESP_LOGCONFIG(TAG, "Product ID: 0x%08X, Serial: 0x%016" PRIX64, product_id, serial_number);
+      ESP_LOGCONFIG(TAG, "Product ID: 0x%08" PRIX32 ", Serial: 0x%016" PRIX64, product_id, serial_number);
       if (this->self_test_on_boot_) {
         this->schedule_setup_state_(SetupState::SELF_TEST, 0);
       } else {
@@ -189,7 +191,7 @@ void STCC4Component::handle_setup_retry_() {
     idx = sizeof(SETUP_RETRY_DELAYS) / sizeof(SETUP_RETRY_DELAYS[0]) - 1;
   }
   uint32_t delay_ms = SETUP_RETRY_DELAYS[idx];
-  ESP_LOGW(TAG, "Retrying setup in %u ms", delay_ms);
+  ESP_LOGW(TAG, "Retrying setup in %" PRIu32 " ms", delay_ms);
   SetupState restart = this->soft_reset_on_boot_ ? SetupState::SOFT_RESET : SetupState::POWER_UP;
   this->set_timeout("setup_retry", delay_ms, [this, restart]() { this->begin_setup_(restart); });
 }
@@ -203,7 +205,7 @@ void STCC4Component::dump_config() {
   LOG_SENSOR("  ", "Humidity", this->humidity_sensor_);
   ESP_LOGCONFIG(TAG, "  Setup State: %s", this->setup_state_to_string_(this->setup_state_));
   if (this->product_id_ != 0) {
-    ESP_LOGCONFIG(TAG, "  Product ID: 0x%08X", this->product_id_);
+    ESP_LOGCONFIG(TAG, "  Product ID: 0x%08" PRIX32, this->product_id_);
     ESP_LOGCONFIG(TAG, "  Serial Number: 0x%016" PRIX64, this->serial_number_);
   }
   ESP_LOGCONFIG(TAG, "  Measurement Mode: %s",
@@ -563,7 +565,8 @@ bool STCC4Component::write_command_with_args_(uint16_t command, const uint16_t *
   for (uint8_t i = 0; i < len; i++) {
     buffer[pos++] = (args[i] >> 8) & 0xFF;
     buffer[pos++] = args[i] & 0xFF;
-    buffer[pos++] = this->crc8_(&buffer[pos - 2], 2);
+    buffer[pos] = this->crc8_(&buffer[pos - 2], 2);
+    pos++;
   }
 
   if (this->write(buffer, pos) != i2c::ERROR_OK) {
