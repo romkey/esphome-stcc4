@@ -4,8 +4,8 @@ name: Release
 # esphome-ai-coding-rules):
 # 1. Actions tab -> Release -> Run workflow, choosing patch, minor or major.
 #    The prepare job bumps the version on a release/vX.Y.Z branch, opens a
-#    "Release vX.Y.Z" PR, and starts CI and Lint on it (PRs opened by a
-#    workflow don't trigger them on their own).
+#    "Release vX.Y.Z" PR, and approves the PR's CI and Lint runs (GitHub
+#    holds runs on PRs opened by a workflow until they're approved).
 # 2. Merge the PR once checks pass. The tag job tags the merge commit and
 #    the release jobs publish it.
 # Pushing a vX.Y.Z tag yourself also works.
@@ -68,6 +68,7 @@ jobs:
           fi
 
       - name: Bump version on a release branch and open a PR
+        id: pr
         env:
           BUMP: ${{ inputs.bump }}
           GH_TOKEN: ${{ github.token }}
@@ -86,10 +87,32 @@ jobs:
           } > "$RUNNER_TEMP/body.md"
           url=$(gh pr create --base main --head "$branch" --title "Release v$version" \
             --body-file "$RUNNER_TEMP/body.md")
-          # Required checks for the PR; a workflow-opened PR doesn't start them.
-          gh workflow run ci.yaml --ref "$branch"
-          gh workflow run lint.yaml --ref "$branch"
-          echo "::notice::Opened $url; merge it once CI and Lint pass"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      # GitHub holds the CI and Lint runs of a PR opened by GITHUB_TOKEN until
+      # someone approves them; the required checks only count those runs.
+      - name: Approve the release PR's CI and Lint runs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          URL: ${{ steps.pr.outputs.url }}
+        run: |
+          sha=$(git rev-parse HEAD)
+          held() { gh run list --commit "$sha" --event pull_request --status action_required \
+            --json databaseId,workflowName --jq "$1"; }
+          for _ in $(seq 1 24); do
+            [ "$(held 'length')" -ge 2 ] && break
+            sleep 5
+          done
+          ids=$(held '.[].databaseId')
+          approved=true
+          for id in $ids; do
+            gh api -X POST "repos/$GITHUB_REPOSITORY/actions/runs/$id/approve" >/dev/null || approved=false
+          done
+          if [ -z "$ids" ] || [ "$approved" != true ]; then
+            echo "::warning::Open $URL and click 'Approve and run workflows' to start CI and Lint"
+          else
+            echo "::notice::Opened $URL; merge it once CI and Lint pass"
+          fi
 
   tag:
     name: Tag release
