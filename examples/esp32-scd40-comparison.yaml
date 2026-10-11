@@ -1,0 +1,35 @@
+# Example: an STCC4 next to an SCD40 on a SparkFun ESP32 Thing Plus, to
+# compare the two CO2 sensors side by side. The SCD40 (0x62) and STCC4
+# (0x64) share the bus.
+#
+# Board and pin choices live here, never in packages/.
+
+substitutions:
+  name: stcc4-scd40-comparison
+  friendly_name: STCC4 SCD40 Comparison
+  stcc4_co2_name: "STCC4 CO2"
+  stcc4_temperature_name: "STCC4 Temperature"
+  stcc4_humidity_name: "STCC4 Humidity"
+
+esp32:
+  board: esp32thing_plus
+  framework:
+    type: esp-idf
+
+packages:
+  base: !include common/base.yaml
+  stcc4: !include ../packages/stcc4.yaml
+
+# The board's own SDA/SCL pins (its Qwiic connector).
+i2c:
+  id: i2c0
+
+sensor:
+  - platform: scd4x
+    i2c_id: i2c0
+    co2:
+      name: "SCD40 CO2"
+    temperature:
+      name: "SCD40 Temperature"
+    humidity:
+      name: "SCD40 Humidity"

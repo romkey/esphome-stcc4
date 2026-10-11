@@ -1,0 +1,70 @@
+# Work on this project without installing ESPHome.
+#
+#   cp examples/secrets.yaml.example examples/secrets.yaml   # then edit it
+#   docker compose run --rm validate      # esphome config on every example
+#   docker compose run --rm build         # compile every example
+#   docker compose run --rm lint          # all pre-commit checks, like CI
+#   docker compose run --rm esphome run examples/example.yaml   # flash via OTA
+#   docker compose up dashboard           # web UI on :6052
+#
+# Speed: the ESPHome image keeps toolchains and its compiler cache under
+# /cache and build trees under /build when those are mounted. Both are named
+# volumes here, so toolchains download once and rebuilds are incremental.
+# Named volumes are also much faster than bind mounts on macOS.
+#
+# Set ESPHOME_VERSION to pin a release, e.g. ESPHOME_VERSION=2026.9.1.
+# Docker Desktop on macOS cannot pass USB through; flash the first time with
+# https://web.esphome.io and use OTA after that.
+
+x-esphome: &esphome
+  image: ghcr.io/esphome/esphome:${ESPHOME_VERSION:-stable}
+  # Re-check the floating tag once a day so "stable" doesn't go stale.
+  pull_policy: daily
+  volumes:
+    - .:/project
+    - esphome-cache:/cache
+    - esphome-build:/build
+  working_dir: /project
+
+services:
+  # Any esphome subcommand: docker compose run --rm esphome <cmd> <file>
+  esphome:
+    <<: *esphome
+
+  validate:
+    <<: *esphome
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["exec /entrypoint.sh config $$(scripts/list-configs.sh)"]
+
+  # What CI runs.
+  build:
+    <<: *esphome
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["exec /entrypoint.sh compile $$(scripts/list-configs.sh)"]
+
+  dashboard:
+    <<: *esphome
+    command: dashboard /project/examples
+    ports:
+      - "6052:6052"
+    restart: unless-stopped
+
+  # Runs .pre-commit-config.yaml: yamllint, actionlint, clang-format, ruff...
+  lint:
+    build:
+      dockerfile_inline: |
+        FROM ghcr.io/astral-sh/uv:0.13.0-python3.13-trixie-slim
+        RUN apt-get update \
+         && apt-get install -y --no-install-recommends git \
+         && rm -rf /var/lib/apt/lists/* \
+         && git config --system --add safe.directory '*'
+    volumes:
+      - .:/project
+      - lint-cache:/root/.cache
+    working_dir: /project
+    command: uvx pre-commit@4.6.2 run --all-files --show-diff-on-failure
+
+volumes:
+  esphome-cache:
+  esphome-build:
+  lint-cache:

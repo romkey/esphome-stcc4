@@ -1,0 +1,6 @@
+STCC4.pdf is copyright Sensirion AG and is not covered by this
+repository's license. It is included unmodified, for reference only.
+For terms of use and the latest version, see the manufacturer:
+
+Source: https://sensirion.com/media/documents/6AED4B15/69295E41/CD_DS_STCC4_D1.pdf
+Retrieved: 2026-10-11

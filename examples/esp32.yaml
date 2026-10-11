@@ -1,0 +1,30 @@
+# Example: an STCC4 on an ESP32 DevKit (Xtensa, original ESP32), with
+# altitude compensation.
+#
+# Board and pin choices live here, never in packages/.
+
+substitutions:
+  name: stcc4-esp32
+  friendly_name: STCC4 ESP32
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+packages:
+  base: !include common/base.yaml
+  stcc4: !include ../packages/stcc4.yaml
+
+# GPIO21/GPIO22 are the ESP32 DevKit's usual I2C pins; neither is a
+# strapping or flash pin.
+i2c:
+  id: i2c0
+  sda: GPIO21
+  scl: GPIO22
+  frequency: 100kHz
+
+sensor:
+  - id: !extend stcc4_sensor
+    # Metres above sea level; the driver converts it to pressure.
+    altitude_compensation: 500
