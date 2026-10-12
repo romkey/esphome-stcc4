@@ -31,4 +31,4 @@ jobs:
         with:
           path: ~/.cache/pre-commit
           key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
-      - run: uvx pre-commit@4.6.2 run --all-files --show-diff-on-failure --color=always
+      - run: uvx pre-commit@4.7.0 run --all-files --show-diff-on-failure --color=always
